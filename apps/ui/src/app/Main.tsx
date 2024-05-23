@@ -21,9 +21,12 @@ const configuration = {
   ],
   iceCandidatePoolSize: 10,
 };
-const socket = io(import.meta.env.VITE_SERVER ?? 'http://localhost:4404', {
-  transports: ['websocket'],
-});
+const socket = io(
+  import.meta.env.VITE_SERVER ?? 'wss://videochat-f4ws.onrender.com'
+  //   {
+  //     transports: ['websocket'],
+  //   }
+);
 
 let pc: RTCPeerConnection | null;
 let localStream: MediaStream | null;
