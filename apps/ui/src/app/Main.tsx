@@ -4,7 +4,7 @@ import { FiVideo, FiVideoOff, FiMic, FiMicOff } from 'react-icons/fi';
 
 const configuration = {
   iceServers: [
-    { urls: ['stun:fr-turn1.xirsys.com'] },
+    // { urls: ['stun:fr-turn1.xirsys.com'] },
     {
       username:
         'ZXsuA3mlsPL_M_6NcBBqGj-YVmYBix9uKBOkjrPQZikUNhbR3Exs0yPsq2R8z79CAAAAAGIV3q5Nb2hhbWFkSGFuYWZp',
