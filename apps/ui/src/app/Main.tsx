@@ -41,12 +41,15 @@ let remoteVideo: any;
 // let localVideo: LegacyRef<HTMLVideoElement> | undefined;
 let localVideo: any;
 
+type TSocketMessageType = 'offer' | 'answer' | 'candidate' | 'ready' | 'bye';
+
 socket.on('message', (e) => {
   if (!localStream) {
     console.log('not ready yet');
     return;
   }
-  switch (e.type) {
+
+  switch (e.type as TSocketMessageType) {
     case 'offer':
       handleOffer(e);
       break;
@@ -90,12 +93,16 @@ async function makeCall() {
       }
       socket.emit('message', message);
     };
-    pc.ontrack = (e) => (remoteVideo!.current!.srcObject! = e.streams[0]);
+
+    pc.ontrack = (e) => (remoteVideo.current.srcObject = e.streams[0]);
+
     localStream
       ?.getTracks()
       .forEach((track) => pc?.addTrack(track, localStream!));
+
     const offer = await pc.createOffer();
     socket.emit('message', { type: 'offer', sdp: offer.sdp });
+
     await pc.setLocalDescription(offer);
   } catch (e) {
     console.log(e);
@@ -104,7 +111,7 @@ async function makeCall() {
 
 async function handleOffer(offer: RTCSessionDescriptionInit) {
   if (pc) {
-    console.error('existing peerconnection');
+    console.error('existing peer connection');
     return;
   }
   try {
@@ -121,14 +128,19 @@ async function handleOffer(offer: RTCSessionDescriptionInit) {
       }
       socket.emit('message', message);
     };
+
     pc.ontrack = (e) => (remoteVideo.current.srcObject = e.streams[0]);
+
     localStream
       ?.getTracks()
       .forEach((track) => pc?.addTrack(track, localStream!));
+
     await pc.setRemoteDescription(offer);
 
     const answer = await pc.createAnswer();
+
     socket.emit('message', { type: 'answer', sdp: answer.sdp });
+
     await pc.setLocalDescription(answer);
   } catch (e) {
     console.log(e);
@@ -137,7 +149,7 @@ async function handleOffer(offer: RTCSessionDescriptionInit) {
 
 async function handleAnswer(answer: RTCSessionDescriptionInit) {
   if (!pc) {
-    console.error('no peerconnection');
+    console.error('no peer connection');
     return;
   }
   try {
@@ -150,7 +162,7 @@ async function handleAnswer(answer: RTCSessionDescriptionInit) {
 async function handleCandidate(candidate: RTCIceCandidateInit | undefined) {
   try {
     if (!pc) {
-      console.error('no peerconnection');
+      console.error('no peer connection');
       return;
     }
     if (!candidate) {
@@ -162,11 +174,13 @@ async function handleCandidate(candidate: RTCIceCandidateInit | undefined) {
     console.log(e);
   }
 }
+
 async function hangup() {
   if (pc) {
     pc.close();
     pc = null;
   }
+
   localStream?.getTracks().forEach((track) => track.stop());
   localStream = null;
   startButton.current.disabled = false;
@@ -175,16 +189,18 @@ async function hangup() {
 }
 
 function MainApp() {
+  const [audioState, setAudioState] = useState(false);
+
   startButton = useRef(null);
   hangupButton = useRef(null);
   muteAudButton = useRef(null);
   localVideo = useRef(null);
   remoteVideo = useRef(null);
+
   useEffect(() => {
     hangupButton.current.disabled = true;
     muteAudButton.current.disabled = true;
   }, []);
-  const [audiostate, setAudio] = useState(false);
 
   const startB = async () => {
     try {
@@ -192,6 +208,7 @@ function MainApp() {
         video: true,
         audio: { echoCancellation: true },
       });
+
       localVideo.current.srcObject = localStream;
     } catch (err) {
       console.log(err);
@@ -210,18 +227,13 @@ function MainApp() {
   };
 
   function muteAudio() {
-    if (audiostate) {
-      localVideo.current.muted = true;
-      setAudio(false);
-    } else {
-      localVideo.current.muted = false;
-      setAudio(true);
-    }
+    localVideo.current.muted = !audioState;
+    setAudioState(!audioState);
   }
 
   return (
     <>
-      <main className="container  ">
+      <main className="container">
         <div className="video bg-main">
           <video
             ref={localVideo}
@@ -259,7 +271,7 @@ function MainApp() {
             ref={muteAudButton}
             onClick={muteAudio}
           >
-            {audiostate ? <FiMic /> : <FiMicOff />}
+            {audioState ? <FiMic /> : <FiMicOff />}
           </button>
         </div>
       </main>
